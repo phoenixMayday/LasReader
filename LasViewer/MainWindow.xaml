@@ -1,0 +1,215 @@
+<Window x:Class="LasViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:LasViewer.Controls"
+        Title="LAS Viewer" Width="1120" Height="760" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F6FA" Foreground="#15253C" FontFamily="Segoe UI" FontSize="13"
+        UseLayoutRounding="True">
+  <Window.InputBindings>
+    <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenCommand}" />
+  </Window.InputBindings>
+  <Window.Resources>
+    <SolidColorBrush x:Key="BorderBrush" Color="#DCE4EE" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#56667D" />
+    <Style x:Key="CurveButtonStyle" TargetType="Button">
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="Margin" Value="2,0,0,0" />
+      <Setter Property="Background" Value="#F3F6FA" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+    </Style>
+    <Style x:Key="OpenButtonStyle" TargetType="Button">
+      <Setter Property="Background" Value="#155BC4" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="16,8" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}"
+                    BorderThickness="1" CornerRadius="5" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="#114DA7" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="#0D3D85" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="#627795" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="White" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <Border Background="White" BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,0,1" Padding="20,13">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="LAS Viewer" VerticalAlignment="Center" FontSize="19" FontWeight="SemiBold" />
+        <StackPanel Grid.Column="1" Margin="24,0,20,0" VerticalAlignment="Center"
+                    Visibility="{Binding HasFile, Converter={StaticResource BooleanToVisibility}}">
+          <TextBlock Text="{Binding FileName}" ToolTip="{Binding FilePath}"
+                     FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding FileSummary}" Foreground="{StaticResource MutedBrush}"
+                     FontSize="12" Margin="0,2,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="Reading…" Margin="0,0,12,0" VerticalAlignment="Center"
+                     Foreground="{StaticResource MutedBrush}"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibility}}" />
+          <Button Content="_Open LAS…" Command="{Binding OpenCommand}"
+                  ToolTip="Open a LAS file (Ctrl+O)" Style="{StaticResource OpenButtonStyle}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <StackPanel Grid.Row="1">
+      <Border Margin="16,12,16,0" Padding="12,8" Background="#FFF0EF"
+              BorderBrush="#EDC9C5" BorderThickness="1" CornerRadius="5"
+              Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibility}}">
+        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="#8C2823"
+                   AutomationProperties.LiveSetting="Polite" />
+      </Border>
+      <Border Margin="16,12,16,0" Padding="12,8" Background="#FFF7E5"
+              BorderBrush="#E5C984" BorderThickness="1" CornerRadius="5"
+              Visibility="{Binding HasFileWarning, Converter={StaticResource BooleanToVisibility}}">
+        <TextBlock Text="{Binding FileWarning}" TextWrapping="Wrap" Foreground="#664910"
+                   AutomationProperties.LiveSetting="Polite" />
+      </Border>
+    </StackPanel>
+
+    <Grid Grid.Row="2" Margin="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="238" />
+        <ColumnDefinition Width="12" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Padding="14,11" BorderBrush="{StaticResource BorderBrush}"
+                  BorderThickness="0,0,0,1">
+            <TextBlock Text="Curves" FontWeight="SemiBold" FontSize="14" />
+          </Border>
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Curves}" Margin="8,5">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="5,7">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Padding="4,0"
+                              ToolTip="{Binding Curve.Description}" AutomationProperties.Name="{Binding Label}">
+                      <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" />
+                    </CheckBox>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                      <Button Style="{StaticResource CurveButtonStyle}" Click="ChangeCurveColor"
+                              ToolTip="Change curve colour…"
+                              AutomationProperties.Name="{Binding Label, StringFormat='Change colour for {0}'}">
+                        <Border Width="13" Height="12" CornerRadius="2" BorderThickness="1" BorderBrush="#56667D">
+                          <Border.Background>
+                            <SolidColorBrush Color="{Binding Color, Mode=OneWay}" />
+                          </Border.Background>
+                        </Border>
+                      </Button>
+                      <Button Content="↑" Style="{StaticResource CurveButtonStyle}"
+                              Command="{Binding DataContext.MoveUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding}" ToolTip="Move up in the list (left on the plot)"
+                              AutomationProperties.Name="{Binding Label, StringFormat='Move {0} up'}" />
+                      <Button Content="↓" Style="{StaticResource CurveButtonStyle}"
+                              Command="{Binding DataContext.MoveDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding}" ToolTip="Move down in the list (right on the plot)"
+                              AutomationProperties.Name="{Binding Label, StringFormat='Move {0} down'}" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Margin="20,0,0,0" Text="{Binding Curve.Description}"
+                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Curve.Description}"
+                               FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                    <CheckBox Grid.Row="2" Grid.ColumnSpan="2" Margin="20,4,0,0" FontSize="12"
+                              Content="Fit X to visible interval" IsChecked="{Binding FitVisibleRange}"
+                              ToolTip="Checked uses the visible depth or time interval. Unchecked uses the full log."
+                              AutomationProperties.Name="{Binding Label, StringFormat='Fit {0} to visible interval'}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}"
+              BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+        <Grid>
+          <Grid Visibility="{Binding HasPlot, Converter={StaticResource BooleanToVisibility}}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                          CanContentScroll="False">
+              <controls:LogPlot x:Name="Plot" IndexCurve="{Binding IndexCurve}" ItemsSource="{Binding SelectedCurves}" />
+            </ScrollViewer>
+            <ScrollBar x:Name="DepthScrollBar" Grid.Column="1" Orientation="Vertical" Focusable="True"
+                       AutomationProperties.Name="Vertical log position"
+                       ToolTip="Visible interval within the full log" />
+            <Border Grid.Row="1" Grid.ColumnSpan="2" BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,1,0,0" Padding="10,5">
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                            IsEnabled="{Binding HasPinnedReaders, ElementName=Plot}">
+                  <Button Content="Remove last" Padding="8,3" Margin="0,0,6,0" Click="RemoveLastReader"
+                          ToolTip="Remove the most recently pinned reader" />
+                  <Button Content="Clear all readers" Padding="8,3" Click="ClearAllReaders" />
+                </StackPanel>
+                <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource MutedBrush}"
+                           Text="Hover to read · Click to pin" FontSize="12" TextTrimming="CharacterEllipsis" />
+              </DockPanel>
+            </Border>
+          </Grid>
+          <TextBlock Text="{Binding EmptyPlotMessage}" TextWrapping="Wrap" TextAlignment="Center"
+                     VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24"
+                     Foreground="{StaticResource MutedBrush}">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding HasPlot}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
