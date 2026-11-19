@@ -36,8 +36,10 @@ The reader handles one scalar numeric log from LAS 1.2, 2.0, or 3.0. It supports
 
 Curves retain their source order and units. `Values[i]` is the double-precision value used for plotting. `GetValueText(i)` returns the numeric value in invariant text, preserving extra decimal precision, or null for a missing sample. Unparsed ancillary sections are available through `AdditionalSections`. `Warnings` reports discrepancies between measured indices and header declarations, and a warning also appears in the viewer.
 
-## Benchmarks and format coverage
+## Reader regression checks
 
-[Viewer performance measurements](docs/plot-performance.md) give pan, zoom and hover timings by sample and channel count. The [LAS compatibility audit](docs/las-compatibility.md) records verified behaviour against the CWLS 1.2, 2.0 and 3.0 well-log specifications.
+Run the checks from the solution directory.
 
-Run the reader regression checks with `dotnet run --project tests/LasReader.Core.Tests -c Release`.
+```powershell
+dotnet run --project tests/LasReader.Core.Tests -c Release
+```
